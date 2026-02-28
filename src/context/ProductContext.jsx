@@ -1,26 +1,74 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { fetchProducts } from "../services/api";
 import { useDebounce } from "../hooks/useDebounce";
 
+function getStateFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    search: params.get("search") ?? "",
+    category: params.get("category") ?? "",
+    page: Math.max(1, parseInt(params.get("page"), 10) || 1),
+    limit: Math.max(5, parseInt(params.get("limit"), 10) || 10),
+  };
+}
 
+function syncUrlToState(search, category, page, limit) {
+  const params = new URLSearchParams();
+  if (search) params.set("search", search);
+  if (category) params.set("category", category);
+  if (page > 1) params.set("page", String(page));
+  if (limit !== 10) params.set("limit", String(limit));
+  const query = params.toString();
+  const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+  window.history.replaceState({}, "", url);
+}
 
 const ProductContext = createContext();
 
 export function ProductProvider({ children }) {
+  const [initialUrl] = useState(getStateFromUrl);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [search, setSearchState] = useState(initialUrl.search);
+  const [category, setCategoryState] = useState(initialUrl.category);
+  const [page, setPageState] = useState(initialUrl.page);
+  const [limit, setLimitState] = useState(initialUrl.limit);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
   const debouncedSearch = useDebounce(search);
+
+  const refetch = () => {
+    setError(null);
+    setRefetchTrigger((t) => t + 1);
+  };
+
+  const setSearch = useCallback((v) => setSearchState(typeof v === "function" ? v : (prev) => v), []);
+  const setCategory = useCallback((v) => setCategoryState(typeof v === "function" ? v : (prev) => v), []);
+  const setPage = useCallback((v) => setPageState(typeof v === "function" ? v : (prev) => v), []);
+  const setLimit = useCallback((v) => setLimitState(typeof v === "function" ? v : (prev) => v), []);
 
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, category, limit]);
+
+  useEffect(() => {
+    syncUrlToState(search, category, page, limit);
+  }, [search, category, page, limit]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const s = getStateFromUrl();
+      setSearchState(s.search);
+      setCategoryState(s.category);
+      setPageState(s.page);
+      setLimitState(s.limit);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
 
   useEffect(() => {
     async function loadProducts() {
@@ -52,7 +100,7 @@ export function ProductProvider({ children }) {
     }
 
     loadProducts();
-  }, [debouncedSearch, category, page, limit]);
+  }, [debouncedSearch, category, page, limit, refetchTrigger]);
 
   return (
     <ProductContext.Provider
@@ -70,6 +118,7 @@ export function ProductProvider({ children }) {
         setLimit,
         totalPages,
         totalCount,
+        refetch,
       }}
     >
       {children}

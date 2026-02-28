@@ -3,13 +3,16 @@ import ProductCard from "./ProductCard";
 import SkeletonCard from "./SkeletonCard";
 
 export default function ProductGrid() {
-  const { products, loading, error, limit } = useProducts();
+  const { products, loading, error, limit, refetch } = useProducts();
 
   if (error) {
     return (
       <div className="error-state">
         <h3>Something went wrong</h3>
         <p>{error}</p>
+        <button type="button" className="error-retry" onClick={refetch}>
+          Try again
+        </button>
       </div>
     );
   }
