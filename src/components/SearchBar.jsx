@@ -6,8 +6,9 @@ export default function SearchBar() {
   return (
     <div className="search-wrapper">
       <input
-        type="search"
+        type="text"
         className="search-input"
+        autoComplete="off"
         aria-label="Search products"
         placeholder="Search products..."
         value={search}

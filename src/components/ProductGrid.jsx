@@ -3,7 +3,7 @@ import ProductCard from "./ProductCard";
 import SkeletonCard from "./SkeletonCard";
 
 export default function ProductGrid() {
-  const { products, loading, error } = useProducts();
+  const { products, loading, error, limit } = useProducts();
 
   if (error) {
     return (
@@ -17,7 +17,7 @@ export default function ProductGrid() {
   if (loading) {
     return (
       <div className="grid">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: limit }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>

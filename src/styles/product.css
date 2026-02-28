@@ -50,6 +50,8 @@
 .search-input {
   width: 100%;
   padding: 0.75rem 2.75rem 0.75rem 1rem;
+  -webkit-appearance: none;
+  appearance: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -60,6 +62,11 @@
 
 .search-input::placeholder {
   color: var(--color-muted);
+}
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  display: none;
 }
 
 .search-input:focus {
@@ -131,6 +138,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   flex: 1;
+  align-content: start;
+  align-items: start;
 }
 
 @media (min-width: 640px) {
