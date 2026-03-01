@@ -48,13 +48,15 @@ export default function Pagination() {
       </div>
 
       <div className="pagination" role="navigation" aria-label="Pagination">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-          aria-label="Previous page"
-        >
-          Previous
-        </button>
+        <div className="pagination-prev">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+            aria-label="Previous page"
+          >
+            Previous
+          </button>
+        </div>
 
         <div className="pagination-numbers">
           {pageNumbers[0] > 1 && (
@@ -99,13 +101,15 @@ export default function Pagination() {
           )}
         </div>
 
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((p) => p + 1)}
-          aria-label="Next page"
-        >
-          Next
-        </button>
+        <div className="pagination-next">
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => p + 1)}
+            aria-label="Next page"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
