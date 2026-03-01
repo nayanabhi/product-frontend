@@ -1,7 +1,7 @@
 import { useProducts } from "../context/ProductContext";
 
 export default function CategoryFilter() {
-  const { category, setCategory } = useProducts();
+  const { category, setCategory, categories, catLoading } = useProducts();
 
   return (
     <div className="filter-wrapper">
@@ -13,11 +13,16 @@ export default function CategoryFilter() {
         onChange={(e) => setCategory(e.target.value)}
       >
         <option value="">All categories</option>
-        <option value="electronics">Electronics</option>
-        <option value="fashion">Fashion</option>
-        <option value="books">Books</option>
-        <option value="home">Home</option>
-        <option value="sports">Sports</option>
+        {catLoading ? (
+          <option disabled>Loading...</option>
+        ) : (
+          categories.map(({ category, count }) => (
+            <option key={category} value={category}>
+              {/* capitalize first letter */}
+              {category.charAt(0).toUpperCase() + category.slice(1)} ({count})
+            </option>
+          ))
+        )}
       </select>
     </div>
   );

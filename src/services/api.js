@@ -8,3 +8,9 @@ export const fetchProducts = async ({ search = "", category = "", page = 1, limi
   });
   return response.data;
 };
+
+export const fetchCategories = async () => {
+  const response = await axios.get(`${API_BASE_URL}/api/products/categories`);
+  console.log("Fetched categories:", response.data);
+  return response.data;
+};

@@ -1,5 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { fetchProducts } from "../services/api";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import { fetchCategories, fetchProducts } from "../services/api";
 import { useDebounce } from "../hooks/useDebounce";
 
 function getStateFromUrl() {
@@ -19,7 +25,9 @@ function syncUrlToState(search, category, page, limit) {
   if (page > 1) params.set("page", String(page));
   if (limit !== 10) params.set("limit", String(limit));
   const query = params.toString();
-  const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+  const url = query
+    ? `${window.location.pathname}?${query}`
+    : window.location.pathname;
   window.history.replaceState({}, "", url);
 }
 
@@ -44,10 +52,22 @@ export function ProductProvider({ children }) {
     setRefetchTrigger((t) => t + 1);
   };
 
-  const setSearch = useCallback((v) => setSearchState(typeof v === "function" ? v : (prev) => v), []);
-  const setCategory = useCallback((v) => setCategoryState(typeof v === "function" ? v : (prev) => v), []);
-  const setPage = useCallback((v) => setPageState(typeof v === "function" ? v : (prev) => v), []);
-  const setLimit = useCallback((v) => setLimitState(typeof v === "function" ? v : (prev) => v), []);
+  const setSearch = useCallback(
+    (v) => setSearchState(typeof v === "function" ? v : (prev) => v),
+    [],
+  );
+  const setCategory = useCallback(
+    (v) => setCategoryState(typeof v === "function" ? v : (prev) => v),
+    [],
+  );
+  const setPage = useCallback(
+    (v) => setPageState(typeof v === "function" ? v : (prev) => v),
+    [],
+  );
+  const setLimit = useCallback(
+    (v) => setLimitState(typeof v === "function" ? v : (prev) => v),
+    [],
+  );
 
   useEffect(() => {
     setPage(1);
@@ -69,7 +89,6 @@ export function ProductProvider({ children }) {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-
   useEffect(() => {
     async function loadProducts() {
       setLoading(true);
@@ -82,15 +101,21 @@ export function ProductProvider({ children }) {
           limit,
         });
         const data = res.data ?? res;
-        const productList = Array.isArray(data) ? data : data?.products ?? [];
+        const productList = Array.isArray(data) ? data : (data?.products ?? []);
         setProducts(productList);
         const meta = res.meta ?? res;
         const total = meta?.totalCount ?? meta?.total ?? productList.length;
-        const pages = meta?.totalPages ?? Math.max(1, Math.ceil((total || productList.length) / limit));
+        const pages =
+          meta?.totalPages ??
+          Math.max(1, Math.ceil((total || productList.length) / limit));
         setTotalCount(total);
         setTotalPages(pages);
       } catch (err) {
-        setError(err?.response?.data?.message || err?.message || "Failed to load products");
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to load products",
+        );
         setProducts([]);
         setTotalCount(0);
         setTotalPages(1);
@@ -101,6 +126,25 @@ export function ProductProvider({ children }) {
 
     loadProducts();
   }, [debouncedSearch, category, page, limit, refetchTrigger]);
+
+  const [categories, setCategories] = useState([]);
+  const [catLoading, setCatLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const res = await fetchCategories();
+        const data = res.data ?? res;
+        setCategories(data);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      } finally {
+        setCatLoading(false);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   return (
     <ProductContext.Provider
@@ -119,6 +163,8 @@ export function ProductProvider({ children }) {
         totalPages,
         totalCount,
         refetch,
+        categories,
+        catLoading,
       }}
     >
       {children}
