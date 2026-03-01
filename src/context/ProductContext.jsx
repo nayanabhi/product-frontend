@@ -90,6 +90,8 @@ export function ProductProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProducts() {
       setLoading(true);
       setError(null);
@@ -100,6 +102,7 @@ export function ProductProvider({ children }) {
           page,
           limit,
         });
+        if (cancelled) return;
         const data = res.data ?? res;
         const productList = Array.isArray(data) ? data : (data?.products ?? []);
         setProducts(productList);
@@ -111,6 +114,7 @@ export function ProductProvider({ children }) {
         setTotalCount(total);
         setTotalPages(pages);
       } catch (err) {
+        if (cancelled) return;
         setError(
           err?.response?.data?.message ||
             err?.message ||
@@ -120,11 +124,14 @@ export function ProductProvider({ children }) {
         setTotalCount(0);
         setTotalPages(1);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     loadProducts();
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedSearch, category, page, limit, refetchTrigger]);
 
   const [categories, setCategories] = useState([]);
